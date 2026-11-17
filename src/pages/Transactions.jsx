@@ -49,7 +49,7 @@ import {
 } from "recharts";
 
 import { auth, database } from "../firebase";
-import "../App.css";
+import { writeAuditLog } from "../utils/auditLog";
 import "../App.css";
 
 // =========================================================
@@ -105,6 +105,16 @@ const formatShortDate = (timestamp) => {
     month: "short",
     day: "numeric",
   });
+};
+
+// Audit logging is secondary to the completed transaction operation.
+// A logging failure must not undo or misreport a successful transaction change.
+const recordTransactionAudit = async (entry) => {
+  try {
+    await writeAuditLog(entry);
+  } catch (auditError) {
+    console.error("Transaction succeeded, but audit logging failed:", auditError);
+  }
 };
 
 // =========================================================
@@ -527,6 +537,13 @@ function Transactions() {
         }
       );
 
+      await recordTransactionAudit({
+        action: "TRANSACTION_ARCHIVED",
+        category: "Transactions",
+        details: `Archived transaction for ${transaction.Product || "Unknown product"}`,
+        targetId: transaction.id,
+      });
+
       setSuccess(
         "Transaction archived successfully."
       );
@@ -574,6 +591,13 @@ function Transactions() {
         }
       );
 
+      await recordTransactionAudit({
+        action: "TRANSACTION_RESTORED",
+        category: "Transactions",
+        details: `Restored transaction for ${transaction.Product || "Unknown product"}`,
+        targetId: transaction.id,
+      });
+
       setSuccess(
         "Transaction restored successfully."
       );
@@ -615,6 +639,13 @@ function Transactions() {
       await remove(
         ref(database, `Transactions/${transaction.id}`)
       );
+
+      await recordTransactionAudit({
+        action: "TRANSACTION_DELETED",
+        category: "Transactions",
+        details: `Permanently deleted transaction for ${transaction.Product || "Unknown product"}`,
+        targetId: transaction.id,
+      });
 
       setSuccess(
         "Transaction permanently deleted."
@@ -664,6 +695,25 @@ function Transactions() {
         }
       }
       await update(ref(database), updates);
+
+      const auditAction =
+        action === "delete"
+          ? "TRANSACTION_DELETED"
+          : action === "restore"
+            ? "TRANSACTION_RESTORED"
+            : "TRANSACTION_ARCHIVED";
+
+      await Promise.all(
+        selectedTransactions.map((item) =>
+          recordTransactionAudit({
+            action: auditAction,
+            category: "Transactions",
+            details: `${action === "delete" ? "Permanently deleted" : action === "restore" ? "Restored" : "Archived"} transaction for ${item.Product || "Unknown product"} (bulk action)`,
+            targetId: item.id,
+          })
+        )
+      );
+
       setSelectedIds((previous) => previous.filter((id) => !selectedTransactions.some((item) => item.id === id)));
       setSuccess(`${count} transaction(s) ${action === "delete" ? "permanently deleted" : action === "restore" ? "restored" : "archived"}.`);
     } catch (actionError) {

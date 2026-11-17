@@ -9,7 +9,6 @@ import {
   ChevronRight,
   Database,
   FileText,
-  ClipboardList,
   LogOut,
   UserPlus,
   Wifi,
@@ -65,11 +64,6 @@ function Layout() {
       icon: FileText,
     },
     {
-      to: "/audit-logs",
-      label: "Audit Logs",
-      icon: ClipboardList,
-    },
-    {
       to: "/register-staff",
       label: "Staff Registration",
       icon: UserPlus,
@@ -109,7 +103,6 @@ function Layout() {
 
         {/* WORKSPACE NAVIGATION */}
         <div className="pro-sidebar-content">
-
           <div className="pro-nav-section">
 
             <span className="pro-nav-title">
@@ -150,7 +143,6 @@ function Layout() {
 
           {/* SYSTEM STATUS */}
           <div className="pro-sidebar-system-fixed">
-
             <span className="pro-nav-title">
               System
             </span>

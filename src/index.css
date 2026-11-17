@@ -1,0 +1,19 @@
+html {
+  background: #f3f6fb;
+}
+
+body {
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+}
+.auth-loading {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  color: #475569;
+  background: #f3f6fb;
+  font-weight: 600;
+}

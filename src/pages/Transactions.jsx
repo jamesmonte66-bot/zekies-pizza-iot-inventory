@@ -1064,7 +1064,7 @@ function Transactions() {
             <ShieldCheck size={16} />
 
             <span>
-              Administrator access: transaction management enabled.
+              
             </span>
           </div>
         )}
